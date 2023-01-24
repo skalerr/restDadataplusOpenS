@@ -1,46 +1,203 @@
-﻿using Dadata;
+﻿using System.Globalization;
+using Dadata;
 using Dadata.Model;
 using Service.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.HttpResult;
 using Domain.Response;
+using Newtonsoft.Json;
 
 
 namespace Service.Implementations;
 
 public class DadataService : IDadataService
 {
-    public async Task<BaseResponse<PositionModel>> GetAddress(string geo)
-    {
-        var token = "1f5d452b294554d406b007d4e6e2e182b5ae1d8c1";
-        var secret = "5fdd415eaa72b3aa07b2d219c5e2ca5eda3a85bc1";
+    private readonly ILoggerMessage _logger;
+    private readonly string _token = "1f5d452b294554d406b007d4e6e2e182b5ae1d8c";
+    private readonly string _secret = "5fdd415eaa72b3aa07b2d219c5e2ca5eda3a85bc";
 
-        var api = new SuggestClientAsync(token);
-        var result = await api.Geolocate(lat: 55.878, lon: 37.653);
-        PositionModel positionModel = result.suggestions.Select(x => x?.value)
-            .ToList().Select(x=> new PositionModel
+    public DadataService(ILoggerMessage logger)
+    {
+        _logger = logger;
+    }
+    public async Task<BaseResponse<PositionModel>> GetAddress(PositionModel positionModel)
+    {
+        var api = new SuggestClientAsync(_token);
+        try
         {
-            Locations = result.suggestions.Select(v => new Location(){Value = v?.value}).ToList()
-        }).FirstOrDefault();
-        if (positionModel != null && positionModel.Locations.Select(x=>x.Value == null).FirstOrDefault())
+            var result = await api.Geolocate(lat: positionModel.Lat,
+                lon: positionModel.Lon,
+                1000,
+                10);
+        
+            positionModel = result.suggestions.Select(x => x?.value)
+                .AsEnumerable().Select(x=> new PositionModel { Locations = result.suggestions.Select(v => new Location()
+                    {
+                        City = v?.data?.city,
+                        Flat = v?.data?.flat,
+                        House = v?.data?.house,
+                        Region = v?.data?.region,
+                        Street = v?.data?.street,
+                        Value = v?.value,
+                        Geo = v?.data?.geo_lat + " " + v?.data?.geo_lon
+                    }).ToList()
+                }).FirstOrDefault();
+        
+            if (positionModel != null && positionModel.Locations.Select(x=>x.Value == null).FirstOrDefault())
+            {
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetAddress(NotFound)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = StatusCode.NotFound.ToString(),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+
+                });
+                return new BaseResponse<PositionModel>()
+                {
+                    Data = null,
+                    IsSuccess = false,
+                    StatusCode = StatusCode.NotFound,
+                    Descripton = "Not Found"
+                };
+            }
+            else
+            {
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetAddress(Ok)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = JsonConvert.SerializeObject(positionModel),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+                });
+                return new BaseResponse<PositionModel>()
+                {
+                    Data = positionModel,
+                    IsSuccess = true,
+                    StatusCode = StatusCode.Ok,
+                    Descripton = "Ok"
+                };
+            }
+        }
+        catch (Exception e)
         {
+            await _logger.AddLog(new Log
+            {
+                Message = "GetAddress(Error)",
+                StackTrace = null,
+                InnerException = e.InnerException?.ToString(),
+                Source = e?.Source,
+                TargetSite = e.TargetSite.ToString(),
+                Data = StatusCode.NotFound.ToString(),
+                HelpLink = e.HelpLink?.ToString(),
+                HResult = e.HResult.ToString(),
+                Date = DateTime.Now.ToString(),
+
+            });
             return new BaseResponse<PositionModel>()
             {
                 Data = null,
                 IsSuccess = false,
                 StatusCode = StatusCode.NotFound,
-                Descripton = "Not Found"
+                Descripton = e.Message + e.InnerException + e.InnerException?.InnerException
             };
         }
-        else
+        
+    }
+
+    public async Task<BaseResponse<PositionModel>> GetGeo(string country, string street, string city)
+    {
+        var api = new CleanClientAsync(_token, _secret);
+        try
         {
+            var result = await api.Clean<Address>($"{country } + {street } + {city}");
+            if (result != null)
+            {
+                var data = new BaseResponse<PositionModel>()
+                {
+                    Data = new PositionModel()
+                    {
+                        Geo = result.geo_lat + " " + result.geo_lon,
+                        Lat = Convert.ToDouble(result.geo_lat.Replace(".", ",")),
+                        Lon = Convert.ToDouble(result.geo_lon.Replace(".", ","))
+                    },
+                    IsSuccess = true,
+                    StatusCode = StatusCode.Ok,
+                    Descripton = "Ok"
+                };
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetGeo(Ok)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = JsonConvert.SerializeObject(data),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+
+                });
+                return data;
+                
+            }
+            else
+            {
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetGeo(Not Found)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = StatusCode.NotFound.ToString(),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+
+                });
+                
+                return new BaseResponse<PositionModel>()
+                {
+                    Data = null,
+                    IsSuccess = false,
+                    StatusCode = StatusCode.NotFound,
+                    Descripton = "Not Found"
+                };
+            }
+        }
+        catch (Exception e)
+        {
+            await _logger.AddLog(new Log
+            {
+                Message = "GetGeo(Error)",
+                StackTrace = null,
+                InnerException = e.InnerException?.ToString(),
+                Source = e?.Source,
+                TargetSite = e.TargetSite.ToString(),
+                Data = StatusCode.NotFound.ToString(),
+                HelpLink = e.HelpLink?.ToString(),
+                HResult = e.HResult.ToString(),
+                Date = DateTime.Now.ToString(),
+
+            });
             return new BaseResponse<PositionModel>()
             {
-                Data = positionModel,
-                IsSuccess = true,
-                StatusCode = StatusCode.Ok,
-                Descripton = "Ok"
+                Data = null,
+                IsSuccess = false,
+                StatusCode = StatusCode.NotFound,
+                Descripton = e.Message + e.InnerException + e.InnerException?.InnerException
             };
         }
     }

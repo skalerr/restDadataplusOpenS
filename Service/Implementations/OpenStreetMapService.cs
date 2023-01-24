@@ -12,12 +12,12 @@ namespace Service.Implementations;
 public class OpenStreetMapService : IOpenStreetMapService
 {
     private readonly HttpClient _httpClient;
-    private string _baseAddress;
+    private readonly ILoggerMessage _logger;
 
-
-    public OpenStreetMapService(HttpClient httpClient)
+    public OpenStreetMapService(HttpClient httpClient, ILoggerMessage logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
 
         _httpClient.BaseAddress = new Uri("https://nominatim.openstreetmap.org/");
         
@@ -29,42 +29,47 @@ public class OpenStreetMapService : IOpenStreetMapService
 
         try
         {
-            response = await _httpClient.GetFromJsonAsync<IList<OpenStreetMapModel>>(url);
+            //response = await _httpClient.GetFromJsonAsync<IList<OpenStreetMapModel>>(url);
+            
+            using (var request = new HttpRequestMessage(new HttpMethod("GET"), url))
+            {
+                request.Headers.TryAddWithoutValidation("authority", "nominatim.openstreetmap.org");
+                request.Headers.TryAddWithoutValidation("accept", "application/json");
+                request.Headers.TryAddWithoutValidation("accept-language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+                request.Headers.TryAddWithoutValidation("cache-control", "max-age=0");
+                request.Headers.TryAddWithoutValidation("sec-ch-ua", "^^");
+                request.Headers.TryAddWithoutValidation("sec-ch-ua-mobile", "?0");
+                request.Headers.TryAddWithoutValidation("sec-ch-ua-platform", "^^");
+                request.Headers.TryAddWithoutValidation("sec-fetch-dest", "document");
+                request.Headers.TryAddWithoutValidation("sec-fetch-mode", "navigate");
+                request.Headers.TryAddWithoutValidation("sec-fetch-site", "none");
+                request.Headers.TryAddWithoutValidation("sec-fetch-user", "?1");
+                request.Headers.TryAddWithoutValidation("upgrade-insecure-requests", "1");
+                request.Headers.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"); 
+            
+                var result = await _httpClient.SendAsync(request);
+                response = JsonConvert.DeserializeObject<IList<OpenStreetMapModel>>(request.ToString());
+            
+            }
 
-            // var responses = await _httpClient.GetByteArrayAsync(url);
-            // using (var client = new HttpClient())
-            // {
-            //     client.DefaultRequestHeaders.Accept.Clear();
-            //     var reply = await client.GetByteArrayAsync(url);
-            //     // response = JsonConvert.DeserializeObject<IList<OpenStreetMapModel>>(await reply.Content.ReadAsStringAsync());
-            // }
-            // using (var request = new HttpRequestMessage(new HttpMethod("GET"), url))
-            // {
-            //     request.Headers.TryAddWithoutValidation("authority", "nominatim.openstreetmap.org");
-            //     request.Headers.TryAddWithoutValidation("accept", "application/json");
-            //     request.Headers.TryAddWithoutValidation("accept-language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
-            //     request.Headers.TryAddWithoutValidation("cache-control", "max-age=0");
-            //     request.Headers.TryAddWithoutValidation("sec-ch-ua", "^^");
-            //     request.Headers.TryAddWithoutValidation("sec-ch-ua-mobile", "?0");
-            //     request.Headers.TryAddWithoutValidation("sec-ch-ua-platform", "^^");
-            //     request.Headers.TryAddWithoutValidation("sec-fetch-dest", "document");
-            //     request.Headers.TryAddWithoutValidation("sec-fetch-mode", "navigate");
-            //     request.Headers.TryAddWithoutValidation("sec-fetch-site", "none");
-            //     request.Headers.TryAddWithoutValidation("sec-fetch-user", "?1");
-            //     request.Headers.TryAddWithoutValidation("upgrade-insecure-requests", "1");
-            //     request.Headers.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"); 
-            //
-            //     var result = await _httpClient.SendAsync(request);
-            //     response = JsonConvert.DeserializeObject<IList<OpenStreetMapModel>>(request.ToString());
-            //
-            // }
-            //
-            // using HttpResponseMessage responseses = await _httpClient.GetAsync(url).ConfigureAwait(false);
-            // var dds =  await responseses.Content.ReadAsStringAsync().ConfigureAwait(false);
-            //
             if (response != null)
             {
+                
                 string result = response.Select(x => new string(x.Longitude + " " + x.Latitude)).ToString();
+                
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetAddress(Ok)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = JsonConvert.SerializeObject(response),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+                });
+                
                 return new BaseResponse<string>()
                 {
                     Data = result,
@@ -75,6 +80,18 @@ public class OpenStreetMapService : IOpenStreetMapService
             }
             else
             {
+                await _logger.AddLog(new Log
+                {
+                    Message = "GetAddress(NotFound)",
+                    StackTrace = null,
+                    InnerException = null,
+                    Source = null,
+                    TargetSite = null,
+                    Data = StatusCode.NotFound.ToString(),
+                    HelpLink = null,
+                    HResult = null,
+                    Date = DateTime.Now.ToString(),
+                });
                 return new BaseResponse<string>()
                 {
                     Data = null,
@@ -86,6 +103,19 @@ public class OpenStreetMapService : IOpenStreetMapService
         }
         catch (Exception e)
         {
+            await _logger.AddLog(new Log
+            {
+                Message = "GetAddress(Error)",
+                StackTrace = null,
+                InnerException = e.InnerException?.ToString(),
+                Source = e?.Source,
+                TargetSite = e.TargetSite.ToString(),
+                Data = StatusCode.NotFound.ToString(),
+                HelpLink = e.HelpLink?.ToString(),
+                HResult = e.HResult.ToString(),
+                Date = DateTime.Now.ToString(),
+
+            });
             return new BaseResponse<string>()
             {
                 Data = null,

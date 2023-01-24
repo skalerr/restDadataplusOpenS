@@ -5,5 +5,6 @@ namespace Service.Interfaces;
 
 public interface IDadataService
 {
-    Task<BaseResponse<PositionModel>> GetAddress(string address);
+    Task<BaseResponse<PositionModel>> GetAddress(PositionModel positionModel);
+    Task<BaseResponse<PositionModel>> GetGeo(string country, string street, string city);
 }

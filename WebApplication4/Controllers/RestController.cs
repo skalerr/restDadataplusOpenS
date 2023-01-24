@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using DAL.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -12,28 +13,44 @@ public class RestController : ControllerBase
 {
     private readonly IDadataService _dadataService;
     private readonly IOpenStreetMapService _openStreetMapService;
+    private readonly ILoggerMessage _logger;
 
-    public RestController(IDadataService dadataService, IOpenStreetMapService openStreetMapService)
+    public RestController(IDadataService dadataService, IOpenStreetMapService openStreetMapService, ILoggerMessage logger)
     {
         _dadataService = dadataService;
         _openStreetMapService = openStreetMapService;
+        _logger = logger;
     }
     // GET: api/Rest
     [HttpGet]
-    // public IEnumerable<string> Get()
-    // {
-    //     return new string[] { "value1", "value2" };
-    // }
+    public IActionResult Get()
+    {
+        return StatusCode((int) HttpStatusCode.MethodNotAllowed);
+    }
 
     // GET: api/Rest/5
     [HttpGet("{name}", Name = "Get")]
     public async Task<IActionResult> Get(string country, string city, string street)
     {
-       var geo = await _openStreetMapService.GetAddress(country, street, city);
+        await _logger.AddLog(new Log
+        {
+            Message = "get ",
+            StackTrace = null,
+            InnerException = null,
+            Source = null,
+            TargetSite = null,
+            Data = $"{country} {city} {street}",
+            HelpLink = null,
+            HResult = null,
+            Date = DateTime.Now.ToString(),
+
+        });
+       var geo = await _dadataService.GetGeo(country, street, city);
+
        if (geo.IsSuccess)
        {
            var locations = await _dadataService.GetAddress(geo.Data);
-           if (locations != null)
+           if (locations.IsSuccess)
            {
                return Ok(locations);
            } else
