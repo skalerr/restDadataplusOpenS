@@ -21,6 +21,7 @@ public class DadataService : IDadataService
         _logger = logger;
         _config = config;
     }
+
     public async Task<BaseResponse<PositionModel>> GetAddress(PositionModel positionModel)
     {
         var api = new SuggestClientAsync(_config.Value.Token);

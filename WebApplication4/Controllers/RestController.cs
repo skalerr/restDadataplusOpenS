@@ -45,23 +45,27 @@ public class RestController : ControllerBase
             Date = DateTime.Now.ToString(),
 
         });
-       var geo = await _dadataService.GetGeo(country, street, city);
+        if (country == null || city == null || street == null) 
+        {
+            return NotFound();
+        }
+        var geo = await _dadataService.GetGeo(country, street, city);
 
-       if (geo.IsSuccess)
-       {
-           var locations = await _dadataService.GetAddress(geo.Data);
-           if (locations.IsSuccess)
-           {
-               return Ok(locations);
-           } else
-           {
-               return NotFound(locations?.Descripton);
-           }
-       }
-       else
-       {
-           return NotFound(geo.Descripton);
-       }
+        if (geo.IsSuccess)
+        {
+            var locations = await _dadataService.GetAddress(geo.Data);
+            if (locations.IsSuccess)
+            {
+                return Ok(locations);
+            } else
+            {
+                return NotFound(locations?.Descripton);
+            }
+        }
+        else
+        {
+            return NotFound(geo.Descripton);
+        }
     }
 
     // POST: api/Rest
