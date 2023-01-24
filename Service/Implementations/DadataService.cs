@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Enum;
 using Domain.HttpResult;
 using Domain.Response;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 
@@ -14,16 +15,15 @@ namespace Service.Implementations;
 public class DadataService : IDadataService
 {
     private readonly ILoggerMessage _logger;
-    private readonly string _token = "1f5d452b294554d406b007d4e6e2e182b5ae1d8c";
-    private readonly string _secret = "5fdd415eaa72b3aa07b2d219c5e2ca5eda3a85bc";
-
-    public DadataService(ILoggerMessage logger)
+    private readonly IOptions<DaDataConfig> _config;
+    public DadataService(ILoggerMessage logger, IOptions<DaDataConfig> config)
     {
         _logger = logger;
+        _config = config;
     }
     public async Task<BaseResponse<PositionModel>> GetAddress(PositionModel positionModel)
     {
-        var api = new SuggestClientAsync(_token);
+        var api = new SuggestClientAsync(_config.Value.Token);
         try
         {
             var result = await api.Geolocate(lat: positionModel.Lat,
@@ -118,7 +118,7 @@ public class DadataService : IDadataService
 
     public async Task<BaseResponse<PositionModel>> GetGeo(string country, string street, string city)
     {
-        var api = new CleanClientAsync(_token, _secret);
+        var api = new CleanClientAsync(_config.Value.Token, _config.Value.Secret);
         try
         {
             var result = await api.Clean<Address>($"{country } + {street } + {city}");
