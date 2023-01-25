@@ -13,9 +13,9 @@ public class RestController : ControllerBase
 {
     private readonly IDadataService _dadataService;
     private readonly IOpenStreetMapService _openStreetMapService;
-    private readonly ILoggerMessage _logger;
+    private readonly ILoggerMessager _logger;
 
-    public RestController(IDadataService dadataService, IOpenStreetMapService openStreetMapService, ILoggerMessage logger)
+    public RestController(IDadataService dadataService, IOpenStreetMapService openStreetMapService, ILoggerMessager logger)
     {
         _dadataService = dadataService;
         _openStreetMapService = openStreetMapService;
@@ -43,12 +43,13 @@ public class RestController : ControllerBase
             HelpLink = null,
             HResult = null,
             Date = DateTime.Now.ToString(),
-
+        //todo: реализовать конструктор
         });
         if (country == null || city == null || street == null) 
         {
             return NotFound();
         }
+
         var geo = await _dadataService.GetGeo(country, street, city);
 
         if (geo.IsSuccess)

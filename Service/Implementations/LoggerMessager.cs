@@ -6,11 +6,11 @@ using Service.Interfaces;
 
 namespace Service.Implementations;
 
-public class LoggerMessage : ILoggerMessage
+public class LoggerMessager : ILoggerMessager
 {
     private readonly ILoggerRepository _loggerRepository;
 
-    public LoggerMessage(ILoggerRepository loggerRepository)
+    public LoggerMessager(ILoggerRepository loggerRepository)
     {
         _loggerRepository = loggerRepository;
     }

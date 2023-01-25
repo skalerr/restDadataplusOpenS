@@ -12,9 +12,9 @@ namespace Service.Implementations;
 public class OpenStreetMapService : IOpenStreetMapService
 {
     private readonly HttpClient _httpClient;
-    private readonly ILoggerMessage _logger;
+    private readonly ILoggerMessager _logger;
 
-    public OpenStreetMapService(HttpClient httpClient, ILoggerMessage logger)
+    public OpenStreetMapService(HttpClient httpClient, ILoggerMessager logger)
     {
         _httpClient = httpClient;
         _logger = logger;

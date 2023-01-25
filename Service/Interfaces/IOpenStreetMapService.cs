@@ -1,4 +1,5 @@
-﻿using Domain.Response;
+﻿using Domain.Entities;
+using Domain.Response;
 
 namespace Service.Interfaces;
 

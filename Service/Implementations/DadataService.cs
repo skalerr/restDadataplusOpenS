@@ -14,9 +14,9 @@ namespace Service.Implementations;
 
 public class DadataService : IDadataService
 {
-    private readonly ILoggerMessage _logger;
+    private readonly ILoggerMessager _logger;
     private readonly IOptions<DaDataConfig> _config;
-    public DadataService(ILoggerMessage logger, IOptions<DaDataConfig> config)
+    public DadataService(ILoggerMessager logger, IOptions<DaDataConfig> config)
     {
         _logger = logger;
         _config = config;

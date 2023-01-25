@@ -4,5 +4,4 @@ namespace DAL.Interfaces;
 
 public interface ILoggerRepository : IBaseRepository
 {
-    
 }

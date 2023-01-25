@@ -3,7 +3,7 @@
 namespace Service.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
-public interface ILoggerMessage
+public interface ILoggerMessager
 {
     Task AddLog(Log log);
 }
