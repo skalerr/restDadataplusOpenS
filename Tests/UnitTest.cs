@@ -21,7 +21,6 @@ public class Tests
     private OpenStreetMapService OpenStreetMapService;
     private DadataService dadata;
     private RestController controller;
-    private IOptions<DaDataConfig> _config;
 
     [SetUp]
     public void Setup()
@@ -68,7 +67,7 @@ public class Tests
 
         // Act
  
-        var rsp = dadata.GetGeo("Россия", "Бехтерева 16", "Уфа").GetAwaiter().GetResult();
+        var rsp = dadata.GetGeo("Россия", "Менделеева 23", "Уфа").GetAwaiter().GetResult();
         // Assert
 
         Assert.NotNull(rsp.Data.Lat);

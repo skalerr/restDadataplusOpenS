@@ -44,12 +44,12 @@ public class DadataService : IDadataService
                         Geo = v?.data?.geo_lat + " " + v?.data?.geo_lon
                     }).ToList()
                 }).FirstOrDefault();
-        
-            if (positionModel != null && positionModel.Locations.Select(x=>x.Value == null).FirstOrDefault())
+
+            if (positionModel == null || positionModel.Locations.Any(x=>x?.Value == null))
             {
                 await _logger.AddLog(new Log
                 {
-                    Message = "GetAddress(NotFound)",
+                    Message = "DaDataService/GetAddress(NotFound)",
                     StackTrace = null,
                     InnerException = null,
                     Source = null,
@@ -72,7 +72,7 @@ public class DadataService : IDadataService
             {
                 await _logger.AddLog(new Log
                 {
-                    Message = "GetAddress(Ok)",
+                    Message = "DaDataService/GetAddress(Ok)",
                     StackTrace = null,
                     InnerException = null,
                     Source = null,
@@ -95,7 +95,7 @@ public class DadataService : IDadataService
         {
             await _logger.AddLog(new Log
             {
-                Message = "GetAddress(Error)",
+                Message = "DaDataService/GetAddress(Error)",
                 StackTrace = null,
                 InnerException = e.InnerException?.ToString(),
                 Source = e?.Source,

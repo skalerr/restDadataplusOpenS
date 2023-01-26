@@ -28,13 +28,13 @@ public class RestController : ControllerBase
         return StatusCode((int) HttpStatusCode.MethodNotAllowed);
     }
 
-    // GET: api/Rest/5
+    // GET: api/Rest/get?county=Russia&city=Ufa&street=Behtereva 16
     [HttpGet("{name}", Name = "Get")]
     public async Task<IActionResult> Get(string country, string city, string street)
     {
         await _logger.AddLog(new Log
         {
-            Message = "get ",
+            Message = "RestController/Get",
             StackTrace = null,
             InnerException = null,
             Source = null,
@@ -45,7 +45,7 @@ public class RestController : ControllerBase
             Date = DateTime.Now.ToString(),
         //todo: реализовать конструктор
         });
-        if (country == null || city == null || street == null) 
+        if (String.IsNullOrWhiteSpace(country) || String.IsNullOrWhiteSpace(city) || String.IsNullOrWhiteSpace(street)) 
         {
             return NotFound();
         }

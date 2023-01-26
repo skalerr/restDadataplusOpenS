@@ -59,7 +59,7 @@ public class OpenStreetMapService : IOpenStreetMapService
                 
                 await _logger.AddLog(new Log
                 {
-                    Message = "GetAddress(Ok)",
+                    Message = "OpenStreetMapService/GetAddress(Ok)",
                     StackTrace = null,
                     InnerException = null,
                     Source = null,
@@ -82,7 +82,7 @@ public class OpenStreetMapService : IOpenStreetMapService
             {
                 await _logger.AddLog(new Log
                 {
-                    Message = "GetAddress(NotFound)",
+                    Message = "OpenStreetMapService/GetAddress(NotFound)",
                     StackTrace = null,
                     InnerException = null,
                     Source = null,
@@ -105,7 +105,7 @@ public class OpenStreetMapService : IOpenStreetMapService
         {
             await _logger.AddLog(new Log
             {
-                Message = "GetAddress(Error)",
+                Message = "OpenStreetMapService/GetAddress(Error)",
                 StackTrace = null,
                 InnerException = e.InnerException?.ToString(),
                 Source = e?.Source,

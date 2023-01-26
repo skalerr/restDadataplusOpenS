@@ -18,7 +18,7 @@ public class LoggerMessager : ILoggerMessager
     
     public async Task AddLog(Log log)
     {
-         _loggerRepository.Add(log);
+         await _loggerRepository.Add(log);
          await _loggerRepository.SaveAll();
     }
 
